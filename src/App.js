@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Flex } from '@chakra-ui/react';
+import { Flex, Box, Text, VStack } from '@chakra-ui/react';
 import ServiceStatus from './components/ServiceStatus';
-import './App.css';
-import axios from 'axios';
 import LineStatus from './components/LineStatus';
 import { SocketContext } from './context/socket';
+import axios from 'axios';
+import './App.css';
+
 axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem('messenger-token');
   config.headers['x-access-token'] = token;
-
   return config;
 });
 
@@ -21,51 +21,72 @@ function App() {
   const fetchRoutes = async () => {
     try {
       const { data } = await axios.get('/api/service-updates');
-
       setRoutes(data);
     } catch (error) {
       console.error(error);
     }
   };
+
   useEffect(() => {
     fetchRoutes();
-
-    // Listen for update events
-  }, []);
-
-  useEffect(() => {
-    // Connect to the Socket.IO server when the component mounts
-
-    // Clean up when the component unmounts
     socket.on('update', () => {
       fetchRoutes();
     });
-    // Clean up the socket connection when the component unmounts
     return () => {
       socket.off('update');
     };
   }, []);
 
   return (
-    <Flex
-      direction="column"
-      bg="white"
-      justify="space-between"
-      align="start"
-      width="100%" // Full width
-    >
-      {selectedRoute ? (
-        <LineStatus
-          route={selectedRoute}
-          setSelectedRoute={setSelectedRoute}
-        />
-      ) : (
-        <ServiceStatus
-          routes={routes}
-          setSelectedRoute={setSelectedRoute}
-        />
-      )}
-    </Flex>
+    <VStack
+      spacing={0}
+      align="stretch"
+      minHeight="100vh">
+      {/* Header */}
+      <Box
+        p={4}
+        bg="blue.500">
+        <Text
+          fontSize="xl"
+          color="white"
+          textAlign="center">
+          Passenger Service Status
+        </Text>
+      </Box>
+
+      {/* Main Content */}
+      <Flex
+        direction="column"
+        p={4}
+        flex="1"
+        maxW={['80%']}
+        margin="0 auto"
+        justify="center"
+        align="center">
+        {selectedRoute ? (
+          <LineStatus
+            route={selectedRoute}
+            setSelectedRoute={setSelectedRoute}
+          />
+        ) : (
+          <ServiceStatus
+            routes={routes}
+            setSelectedRoute={setSelectedRoute}
+          />
+        )}
+      </Flex>
+
+      {/* Footer */}
+      <Box
+        p={4}
+        bg="blue.500">
+        <Text
+          color="white"
+          textAlign="center">
+          © [Insert]. All rights reserved.
+        </Text>
+      </Box>
+    </VStack>
   );
 }
 
